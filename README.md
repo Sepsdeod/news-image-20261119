@@ -6,11 +6,14 @@
 [![license](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
 A front-page poster summing up the world's news of Thursday 19 November
-2026: the GTA VI launch leads, with Jeffries' historic Speaker nomination,
-the ICJ's Rohingya judgment, Cyclone Akvan, the EU's €45bn Ukraine loan,
-Voyager 1's one-light-day milestone, and the Trump–Xi–Putin meeting in
-Shenzhen. Drawn from scratch with Pillow (`draw.py`); `main.ts` copies the
-finished `entry.png` to the output directory, byte for byte, every run.
+2026 (late edition): the GTA VI launch leads — live first in New Zealand
+at midnight, critics score 99/100 — with the ICJ's Rohingya verdict, the
+first-ever Trump–Xi–Putin trilateral in Shenzhen, the third Crimea Bridge
+strike in a week, the Gulf escalation, Jeffries' 251–11 Speaker nomination,
+unrest in Bangladesh, Cyclone Akvan, the EU's €45bn Ukraine loan, and the
+UK's 1,000-drone pledge for Kyiv. Drawn from scratch with Pillow
+(`draw.py`); `main.ts` copies the finished `entry.png` to the output
+directory, byte for byte, every run.
 
 ## Run
 
