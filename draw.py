@@ -1,27 +1,50 @@
 #!/usr/bin/env python3
-"""Draw the 19 November 2026 front page, v2 (coordinator rebuild).
+"""Draw the 19 November 2026 full-day front page, v3 (coordinator rebuild).
 
-One original 1024x1024 poster: "THE WORLD — Thursday 19 November 2026".
-Nine stories in a 3x3 grid under a Vice City sunset lead panel.
+One original 1024x1024 poster: "THE WORLD - Thursday 19 November 2026".
+Lead: GTA VI launch day. Below it, 35 stories in a 5x7 grid grouped by
+region - 36 stories total across 7 regions plus global - each with a short
+headline and a one-line deck, colour-coded by region.
 
-News verified in-session against live reporting (19 Nov 2026):
-- GTA VI launch day; critics 99/100 (Metacritic 99 / OpenCritic 98).
-- ICJ delivers its Rohingya judgment: thousands killed, widespread sexual
-  violence (Reuters, live from The Hague, 19 Nov).
-- First-ever Trump-Xi-Putin trilateral in Shenzhen.
-- Crimea Bridge hit for a third time in a week; traffic suspended (Reuters).
-- Iran strikes US bases in Kuwait (Ali Al Salem) and Bahrain after the US
-  hit Qeshm Island (Reuters).
-- Jeffries nominated for Speaker 251-11; floor vote 3 January.
-- Bangladesh: Yunus ancestral home torched, 4 killed, clashes in 28
-  districts (Reuters).
-- Cyclone Akvan: 50,000+ evacuated off India's east coast.
-- EU offers EUR 45bn to Kyiv; UK pledges 1,000+ long-range drones
-  (GOV.UK, GBP 260m package, Berlin).
+Every story was verified in-session against live reporting dated
+19 November 2026 (Reuters, AP, BBC, GOV.UK, Politico, Sotheby's/Artnet,
+Pew, Save the Children, IAEA, and same-day news digests):
+- Kept from v2 (verified): ICJ Rohingya verdict delivered; first-ever
+  Trump-Xi-Putin trilateral in Shenzhen; third Crimea Bridge strike;
+  Gulf escalation (Iran hits US bases in Kuwait and Bahrain after the US
+  strike on Qeshm); Jeffries nominated Speaker 251-11; Bangladesh
+  (Yunus home torched, 4 killed, clashes in 28 districts); Cyclone
+  Akvan (50,000+ evacuated off India's east coast); EU EUR 45bn loan
+  to Kyiv; UK 1,000 long-range drones for Kyiv (GBP 260m, Berlin).
+- New for v3: GTA VI launch (critics 99/100) as lead; Van Gogh sells
+  for $190.4m, an artist record (Sotheby's New York, reported 19 Nov);
+  US-Venezuela military pact signed in Caracas (Hegseth, ties cut in
+  2005 restored); Pennsylvania measles passes 1,500 cases; Bay Area
+  storm floods San Francisco; isolated Awa group makes rare contact
+  in Brazil's Amazon; Panama arrests a second suspect over the attack
+  on journalist Rolando Rodriguez's home; Ukraine hits two Russian
+  oil refineries (about half of Russia's refining output hit); UK-EU
+  summit to mend post-Brexit ties; European Commission hit by a
+  cyberattack using the ARTEX AI tool (Politico, 19 Nov); Israel
+  crosses the Gaza ceasefire line (Yellow Line); Houthi rocket debris
+  damages the Saudi PIF tower in Riyadh; IEA calls the Hormuz crisis
+  the greatest threat to energy security; tanker struck in the Strait
+  of Hormuz (UKMTO, crew safe); Ethiopia and Eritrea mass troops,
+  artillery near disputed Badme; Uganda landslide survivors seek
+  justice at the UN; South Korea's top court orders a retrial for
+  ex-PM Han Duck-soo (15-year martial-law sentence overturned);
+  Russian Tu-95 bombers land in Vietnam after flights near Taiwan
+  and Japan; Japan's PM Takaichi cut a lonely figure at APEC;
+  North Korea expands uranium enrichment (IAEA); Indonesia passes an
+  asset-forfeiture bill; US-Philippines $2bn+ loan package pursued;
+  Fiji declares a disaster over El Nino drought; Cyclone Xavier
+  nears the Cook Islands (winds near 100 knots); COP31 ministers
+  race for a deal in Antalya; 589m children lived in conflict zones
+  in 2025 (Save the Children); Pew projects Islam passes Christianity
+  as the world's largest faith by 2035.
 Everything is drawn with Pillow primitives; no photos, no copied artwork.
 Deterministic: no randomness, no timestamps baked into the image.
 """
-import math
 import os
 
 from PIL import Image, ImageDraw, ImageFont
@@ -35,30 +58,90 @@ GREY = (70, 70, 70)
 RULE = (180, 170, 150)
 WHITE = (255, 255, 255)
 
-# (accent, headline, deck, icon)
+# Region colours.
+REGIONS = {
+    "N. AMERICA": (20, 33, 61),
+    "LATIN AM.": (30, 120, 80),
+    "EUROPE": (30, 60, 140),
+    "MID. EAST": (140, 60, 20),
+    "AFRICA": (160, 110, 20),
+    "ASIA": (120, 40, 40),
+    "PACIFIC": (20, 90, 120),
+    "GLOBAL": (90, 60, 120),
+}
+
+# (region, headline, deck)
 STORIES = [
-    ((120, 40, 40), "ICJ RULES ON ROHINGYA GENOCIDE",
-     "Court finds thousands killed, widespread sexual violence", "scales"),
-    ((140, 60, 20), "THREE NUCLEAR POWERS, ONE TABLE",
-     "Trump, Xi and Putin hold first-ever trilateral in Shenzhen", "summit"),
-    ((20, 33, 61), "CRIMEA BRIDGE HIT AGAIN",
-     "Third strike in a week halts traffic hours before Shenzhen summit",
-     "bridge"),
-    ((120, 40, 40), "WAR SPREADS ACROSS THE GULF",
-     "Iran hits US bases in Kuwait and Bahrain after US strike on Qeshm",
-     "missile"),
-    ((20, 33, 61), "JEFFRIES NOMINATED 251-11",
-     "Democrats' pick for first Black Speaker; floor vote in January",
-     "capitol"),
-    ((140, 60, 20), "BANGLADESH IN FLAMES",
-     "Yunus home torched, 4 killed; clashes in 28 districts",
-     "flame"),
-    ((20, 90, 120), "CYCLONE AKVAN BEARS DOWN",
-     "50,000+ evacuated as storm nears India's east coast", "storm"),
-    ((30, 60, 140), "EU OFFERS \u20ac45BN TO KYIV",
-     "Loan covers two-thirds of Ukraine's 2027 budget gap", "stars"),
-    ((60, 40, 90), "UK SENDS 1,000 DRONES TO KYIV",
-     "\u00a3260m package unveiled in Berlin; drones fly 1,000km+", "drone"),
+    ("N. AMERICA", "JEFFRIES NOMINATED 251-11",
+     "Democrats' pick for first Black Speaker"),
+    ("N. AMERICA", "VAN GOGH SELLS FOR $190.4M",
+     "Blossoming Chestnut Trees sets artist record"),
+    ("N. AMERICA", "US, VENEZUELA SIGN MILITARY PACT",
+     "Hegseth in Caracas restores ties cut in 2005"),
+    ("N. AMERICA", "MEASLES PASSES 1,500 IN PENNSYLVANIA",
+     "Outbreak grows; US loses elimination status"),
+    ("N. AMERICA", "BAY AREA STORM FLOODS SAN FRANCISCO",
+     "Record rain disrupts roads and transit"),
+    ("LATIN AM.", "ISOLATED AWA GROUP MAKES CONTACT",
+     "Rare encounter in Brazil's Amazon"),
+    ("LATIN AM.", "PANAMA ARRESTS SECOND SUSPECT",
+     "Attack on journalist Rodriguez's home"),
+    ("EUROPE", "EU OFFERS \u20ac45BN TO KYIV",
+     "Loan covers two-thirds of Ukraine's 2027 gap"),
+    ("EUROPE", "UK SENDS 1,000 DRONES TO KYIV",
+     "\u00a3260m Berlin package; drones fly 1,000km+"),
+    ("EUROPE", "CRIMEA BRIDGE HIT AGAIN",
+     "Third strike in a week halts traffic"),
+    ("EUROPE", "UKRAINE HITS TWO RUSSIAN REFINERIES",
+     "About half of Russia's refining output hit"),
+    ("EUROPE", "UK AND EU SUMMIT TO PATCH TIES",
+     "Leaders meet to mend post-Brexit relations"),
+    ("EUROPE", "EU COMMISSION HIT BY CYBERATTACK",
+     "AI tool ARTEX used; staff data may be exposed"),
+    ("MID. EAST", "WAR SPREADS ACROSS THE GULF",
+     "Iran hits US bases in Kuwait and Bahrain"),
+    ("MID. EAST", "ISRAEL CROSSES GAZA CEASEFIRE LINE",
+     "Troops enter Hamas-held central Gaza"),
+    ("MID. EAST", "HOUTHI ROCKET DEBRIS HITS RIYADH",
+     "Saudi PIF tower damaged; coalition hits Yemen"),
+    ("MID. EAST", "IEA: HORMUZ 'GREATEST THREAT'",
+     "Energy watchdog warns global supply at risk"),
+    ("MID. EAST", "TANKER STRUCK IN STRAIT OF HORMUZ",
+     "Engine-room hit near Khasab; crew safe"),
+    ("AFRICA", "ETHIOPIA, ERITREA MASS TROOPS",
+     "Artillery near disputed Badme raises war fears"),
+    ("AFRICA", "UGANDA LANDSLIDE SURVIVORS AT UN",
+     "Families seek justice after deadly slide"),
+    ("ASIA", "ICJ RULES ON ROHINGYA GENOCIDE",
+     "Thousands killed, widespread sexual violence"),
+    ("ASIA", "THREE NUCLEAR POWERS, ONE TABLE",
+     "First-ever Trump-Xi-Putin talks in Shenzhen"),
+    ("ASIA", "BANGLADESH IN FLAMES",
+     "Yunus home torched, 4 killed; clashes in 28 districts"),
+    ("ASIA", "CYCLONE AKVAN BEARS DOWN",
+     "50,000+ evacuated off India's east coast"),
+    ("ASIA", "SOUTH KOREA ORDERS HAN RETRIAL",
+     "Top court overturns ex-PM's 15-year sentence"),
+    ("ASIA", "RUSSIAN BOMBERS LAND IN VIETNAM",
+     "Tu-95s arrive after flights near Taiwan, Japan"),
+    ("ASIA", "JAPAN'S PM CUT LONELY FIGURE",
+     "Takaichi isolated at APEC in Shenzhen"),
+    ("ASIA", "NORTH KOREA EXPANDS ENRICHMENT",
+     "IAEA warns of growing uranium programme"),
+    ("ASIA", "INDONESIA PASSES SEIZURE BILL",
+     "Asset forfeiture without a conviction"),
+    ("ASIA", "US-PHILIPPINES $2BN LOAN PACKAGE",
+     "White House pursues financing for alliance"),
+    ("PACIFIC", "FIJI DECLARES DISASTER OVER DROUGHT",
+     "El Nino water crisis triggers emergency"),
+    ("PACIFIC", "CYCLONE XAVIER NEARS COOK ISLANDS",
+     "Winds near 100 knots at the storm's centre"),
+    ("GLOBAL", "COP31 MINISTERS RACE FOR A DEAL",
+     "Antalya talks stall as ministers meet"),
+    ("GLOBAL", "589M CHILDREN LIVED IN CONFLICT",
+     "Save the Children: nearly 1 in 4 children in war zones"),
+    ("GLOBAL", "ISLAM TO PASS CHRISTIANITY BY 2035",
+     "Pew: Muslims to become world's largest faith"),
 ]
 
 
@@ -71,8 +154,8 @@ def load_font(bold, size):
     return ImageFont.load_default()
 
 
-def fit_lines(draw, text, font, width):
-    """Greedy word wrap; returns a list of lines that fit width."""
+def fit_lines(draw, text, font, width, max_lines):
+    """Greedy word wrap, capped at max_lines; warns (and truncates) on overflow."""
     out, current = [], ""
     for word in text.split():
         trial = f"{current} {word}".strip()
@@ -83,136 +166,95 @@ def fit_lines(draw, text, font, width):
             current = word
     if current:
         out.append(current)
+    if len(out) > max_lines:
+        print(f"OVERFLOW ({max_lines} lines max): {text!r} -> {out}")
+        out = out[:max_lines]
     return out
 
 
-def icon(draw, kind, x, y, color):
-    """Small 34x34 line icon inside a square frame."""
-    draw.rectangle([x, y, x + 34, y + 34], outline=color, width=3)
-    if kind == "capitol":
-        draw.pieslice([x + 7, y + 4, x + 27, y + 20], 180, 360, fill=color)
-        draw.rectangle([x + 6, y + 20, x + 28, y + 30], fill=color)
-    elif kind == "scales":
-        draw.line([(x + 17, y + 4), (x + 17, y + 30)], fill=color, width=3)
-        draw.line([(x + 5, y + 8), (x + 29, y + 8)], fill=color, width=3)
-        draw.polygon([(x + 5, y + 8), (x + 11, y + 20), (x + 1, y + 20)],
-                     outline=color)
-        draw.polygon([(x + 29, y + 8), (x + 33, y + 20), (x + 23, y + 20)],
-                     outline=color)
-    elif kind == "storm":
-        for r in (4, 9, 14):
-            draw.arc([x + 17 - r, y + 17 - r, x + 17 + r, y + 17 + r],
-                     20, 300, fill=color, width=3)
-    elif kind == "stars":
-        for k in range(8):
-            ang = math.radians(k * 45)
-            sx = x + 17 + int(11 * math.cos(ang))
-            sy = y + 17 + int(11 * math.sin(ang))
-            draw.ellipse([sx - 2, sy - 2, sx + 2, sy + 2], fill=color)
-    elif kind == "bridge":
-        draw.arc([x + 3, y + 10, x + 31, y + 30], 180, 360, fill=color,
-                 width=3)
-        draw.line([(x + 3, y + 22), (x + 31, y + 22)], fill=color, width=3)
-        for vx in (9, 17, 25):
-            draw.line([(x + vx, y + 22), (x + vx, y + 12)], fill=color,
-                      width=2)
-    elif kind == "missile":
-        draw.line([(x + 8, y + 28), (x + 26, y + 8)], fill=color, width=4)
-        draw.polygon([(x + 26, y + 8), (x + 30, y + 4), (x + 31, y + 12)],
-                     fill=color)
-        draw.line([(x + 8, y + 28), (x + 4, y + 32)], fill=color, width=3)
-    elif kind == "flame":
-        draw.polygon([(x + 17, y + 3), (x + 26, y + 16), (x + 22, y + 24),
-                      (x + 27, y + 30), (x + 17, y + 31), (x + 7, y + 30),
-                      (x + 12, y + 24), (x + 8, y + 16)], fill=color)
-    elif kind == "drone":
-        for cx, cy in ((x + 7, y + 7), (x + 27, y + 7),
-                       (x + 7, y + 27), (x + 27, y + 27)):
-            draw.ellipse([cx - 4, cy - 4, cx + 4, cy + 4], outline=color,
-                         width=2)
-        draw.rectangle([x + 12, y + 12, x + 22, y + 22], fill=color)
-    else:  # summit skyline
-        draw.rectangle([x + 4, y + 16, x + 12, y + 30], fill=color)
-        draw.rectangle([x + 13, y + 10, x + 21, y + 30], fill=color)
-        draw.rectangle([x + 22, y + 18, x + 30, y + 30], fill=color)
-
-
-def sunset_panel(draw):
-    """Lead panel: Vice City sunset over a skyline, with headline band."""
-    x0, y0, x1, y1 = 28, 142, 996, 470
+def lead_strip(draw):
+    """Slim sunset lead strip: GTA VI launch."""
+    x0, y0, x1, y1 = 24, 106, 1000, 190
     span = y1 - y0
     for i in range(span):
         t = i / span
         draw.line([(x0, y0 + i), (x1, y0 + i)],
-                  fill=(int(255 - 60 * t), int(120 + 60 * t),
-                        int(90 + 110 * t)))
-    draw.ellipse([452, 168, 572, 288], fill=(255, 214, 90))
-    skyline = [(40, 90, 120), (150, 70, 170), (240, 110, 100),
-               (370, 80, 190), (470, 100, 130), (590, 70, 160),
-               (680, 120, 110), (820, 90, 180), (920, 60, 130)]
-    for bx, bw, bh in skyline:
-        draw.rectangle([x0 + bx, y1 - bh, x0 + bx + bw, y1], fill=(40, 20, 60))
-        for wy in range(y1 - bh + 12, y1 - 8, 18):
-            for wx in range(x0 + bx + 10, x0 + bx + bw - 8, 20):
-                draw.rectangle([wx, wy, wx + 6, wy + 8], fill=(255, 214, 90))
-    for px in (120, 880):
-        draw.line([(px, y1), (px, y1 - 70)], fill=(30, 60, 30), width=6)
-        for ang in range(-70, 71, 35):
-            ex = px + int(48 * math.sin(math.radians(ang)))
-            ey = y1 - 70 - int(28 * abs(math.cos(math.radians(ang))))
-            draw.line([(px, y1 - 70), (ex, ey)], fill=(30, 90, 40), width=5)
-    draw.rounded_rectangle([x1 - 218, y0 + 14, x1 - 14, y0 + 52], radius=18,
+                  fill=(int(255 - 135 * t), int(110 - 60 * t),
+                        int(80 + 60 * t)))
+    draw.ellipse([880, 112, 936, 168], fill=(255, 214, 90))
+    draw.rounded_rectangle([x1 - 190, y0 + 8, x1 - 10, y0 + 34], radius=13,
                            fill=GOLD)
-    draw.text((x1 - 116, y0 + 33), "CRITICS: 99/100",
-              font=load_font(True, 20), fill=NAVY, anchor="mm")
-    draw.rectangle([x0, y1 - 92, x1, y1], fill=NAVY)
-    draw.text((x0 + 20, y1 - 78), "VICE CITY OPENS ITS DOORS",
-              font=load_font(True, 40), fill=WHITE)
-    draw.text((x0 + 20, y1 - 34),
-              "GTA VI goes live \u2014 first in New Zealand at midnight",
-              font=load_font(False, 24), fill=(220, 220, 220))
+    draw.text((x1 - 100, y0 + 21), "CRITICS: 99/100",
+              font=load_font(True, 15), fill=NAVY, anchor="mm")
+    draw.text((x0 + 16, y0 + 26), "VICE CITY OPENS ITS DOORS",
+              font=load_font(True, 30), fill=WHITE)
+    draw.text((x0 + 16, y0 + 62),
+              "GTA VI goes live - first in New Zealand at midnight",
+              font=load_font(False, 17), fill=WHITE)
 
 
-def story_card(draw, accent, head, deck, kind, cx, cy, cw, ch):
-    draw.rounded_rectangle([cx, cy, cx + cw, cy + ch], radius=10,
-                           fill=WHITE, outline=RULE, width=2)
-    draw.rectangle([cx, cy, cx + cw, cy + 8], fill=accent)
-    tx, ty = cx + 16, cy + 18
-    icon(draw, kind, tx, ty, accent)
-    hy = ty + 2
-    for line in fit_lines(draw, head, load_font(True, 20), cw - 62)[:2]:
-        draw.text((tx + 44, hy), line, font=load_font(True, 20), fill=INK)
-        hy += 23
-    sy = ty + 74
-    for line in fit_lines(draw, deck, load_font(False, 16), cw - 32)[:2]:
-        draw.text((tx, sy), line, font=load_font(False, 16), fill=GREY)
-        sy += 20
+def story_card(draw, region, head, deck, cx, cy, cw, ch):
+    color = REGIONS[region]
+    draw.rounded_rectangle([cx, cy, cx + cw, cy + ch], radius=8,
+                           fill=WHITE, outline=RULE, width=1)
+    draw.rectangle([cx + 8, cy, cx + cw - 8, cy + 4], fill=color)
+    tx = cx + 10
+    draw.text((tx, cy + 9), region, font=load_font(True, 9), fill=color)
+    head_lines = fit_lines(draw, head, load_font(True, 15), cw - 20, 3)
+    hy = cy + 23
+    for line in head_lines:
+        draw.text((tx, hy), line, font=load_font(True, 15), fill=INK)
+        hy += 17
+    max_deck = 2 if len(head_lines) > 1 else 3
+    deck_lines = fit_lines(draw, deck, load_font(False, 11), cw - 20,
+                           max_deck)
+    dy = hy + 2
+    for line in deck_lines:
+        draw.text((tx, dy), line, font=load_font(False, 11), fill=GREY)
+        dy += 13
 
 
 def build():
     img = Image.new("RGB", (SIZE, SIZE), PAPER)
     d = ImageDraw.Draw(img)
     # Masthead.
-    d.rectangle([0, 0, SIZE, 118], fill=NAVY)
-    d.rectangle([0, 118, SIZE, 124], fill=GOLD)
-    d.text((SIZE // 2, 52), "THE WORLD", font=load_font(True, 84),
-           fill=WHITE, anchor="mm")
-    d.text((SIZE // 2, 100), "THURSDAY 19 NOVEMBER 2026",
-           font=load_font(True, 30), fill=GOLD, anchor="mm")
-    sunset_panel(d)
-    # 3x3 story grid.
-    cw, ch, gx, gy = 308, 138, 28, 490
-    for i, (accent, head, deck, kind) in enumerate(STORIES):
-        cx = gx + (i % 3) * (cw + 16)
-        cy = gy + (i // 3) * (ch + 12)
-        story_card(d, accent, head, deck, kind, cx, cy, cw, ch)
+    d.rectangle([0, 0, SIZE, 84], fill=NAVY)
+    d.rectangle([0, 84, SIZE, 88], fill=GOLD)
+    d.text((24, 44), "THE WORLD", font=load_font(True, 56), fill=WHITE,
+           anchor="lm")
+    d.text((1000, 30), "36 STORIES  \u00b7  7 REGIONS",
+           font=load_font(True, 20), fill=GOLD, anchor="rm")
+    d.text((1000, 58), "FULL-DAY EDITION",
+           font=load_font(True, 20), fill=WHITE, anchor="rm")
+    # Region legend strip.
+    lx, ly = 24, 93
+    d.text((lx, ly), "THURSDAY 19 NOVEMBER 2026",
+           font=load_font(True, 13), fill=NAVY)
+    rx = 1024 - 24
+    for name in reversed(list(REGIONS)):
+        label = name.replace("N. AMERICA", "N AMERICA").replace(
+            "LATIN AM.", "LATIN AM").replace("MID. EAST", "MID EAST")
+        w = d.textlength(label, font=load_font(True, 10))
+        rx -= int(w) + 4
+        d.rectangle([rx - 12, ly + 1, rx - 2, ly + 11],
+                    fill=REGIONS[name])
+        d.text((rx, ly), label, font=load_font(True, 10), fill=GREY)
+        rx -= 16
+    lead_strip(d)
+    # 5x7 story grid.
+    cw, ch, gx, gy = 187, 104, 24, 198
+    for i, (region, head, deck) in enumerate(STORIES):
+        cx = gx + (i % 5) * (cw + 9)
+        cy = gy + (i // 5) * (ch + 8)
+        story_card(d, region, head, deck, cx, cy, cw, ch)
     # Footer.
-    d.rectangle([0, 968, SIZE, SIZE], fill=NAVY)
-    d.text((SIZE // 2, 996),
-           "THE DAY IN ONE IMAGE  \u00b7  LATE EDITION  \u00b7  19 NOVEMBER 2026",
-           font=load_font(True, 22), fill=WHITE, anchor="mm")
+    d.rectangle([0, 976, SIZE, SIZE], fill=NAVY)
+    d.text((SIZE // 2, 1000),
+           "THE DAY IN ONE IMAGE  \u00b7  36 STORIES  \u00b7  19 NOVEMBER 2026",
+           font=load_font(True, 20), fill=WHITE, anchor="mm")
     img.save("entry.png", optimize=True)
     print("wrote entry.png", os.path.getsize("entry.png"), "bytes")
+    print("stories:", len(STORIES) + 1, "(lead + grid)")
 
 
 if __name__ == "__main__":

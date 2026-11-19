@@ -1,4 +1,4 @@
-// news-image-20261119 entrypoint (coordinator rebuild, v2).
+// news-image-20261119 entrypoint (coordinator rebuild, v3).
 //
 // The program is deterministic and network-free: it reads entry.png from
 // the repository root (next to this file) and writes the exact same bytes
